@@ -1,36 +1,38 @@
 package ru.ranepa.carsalon;
 
-public class Car {
+public class Vehicle {
     private static final int CURRENT_YEAR = 2026;
     private static final int MAX_CAR_AGE = 40;
     private static final int DEFAULT_YEAR = 2026;
     private static final double DEFAULT_PRICE = 1000000;
 
-    private static int totalCars = 0;
+    private static int totalVehicles = 0;
 
     private String brand;
     private String model;
     private int year;
     private double price;
     private boolean sold;
+    private Client buyer;
+    private Client testDriveClient;
 
     // полный конструктор
-    public Car(String brand, String model, int year, double price) {
+    public Vehicle(String brand, String model, int year, double price) {
         setBrand(brand);
         setModel(model);
         setYear(year);
         setPrice(price);
         this.sold = false;
-        totalCars++;
+        totalVehicles++;
     }
 
-    // сокращённый конструктор: только марка и модель
-    public Car(String brand, String model) {
+    // сокращённый конструктор
+    public Vehicle(String brand, String model) {
         this(brand, model, DEFAULT_YEAR, DEFAULT_PRICE);
     }
 
-    public static int getTotalCars() {
-        return totalCars;
+    public static int getTotalVehicles() {
+        return totalVehicles;
     }
 
     public String getBrand() {
@@ -41,7 +43,7 @@ public class Car {
         if (brand == null || brand.trim().isEmpty()) {
             throw new IllegalArgumentException("Марка не может быть пустой.");
         }
-        this.brand = brand;
+        this.brand = brand.trim();
     }
 
     public String getModel() {
@@ -52,7 +54,7 @@ public class Car {
         if (model == null || model.trim().isEmpty()) {
             throw new IllegalArgumentException("Модель не может быть пустой.");
         }
-        this.model = model;
+        this.model = model.trim();
     }
 
     public int getYear() {
@@ -84,14 +86,32 @@ public class Car {
         return sold;
     }
 
-    public void setSold(boolean sold) {
-        this.sold = sold;
+    // продажа: false, если машина уже продана
+    public boolean sell(Client buyer) {
+        if (sold) {
+            return false;
+        }
+        this.sold = true;
+        this.buyer = buyer;
+        this.testDriveClient = null;
+        return true;
+    }
+
+    // запись на тест-драйв: false, если машина продана
+    public boolean bookTestDrive(Client client) {
+        if (sold) {
+            return false;
+        }
+        this.testDriveClient = client;
+        return true;
     }
 
     public String toString() {
         String status;
         if (sold) {
-            status = "продана";
+            status = "продана клиенту " + buyer.getName();
+        } else if (testDriveClient != null) {
+            status = "в наличии, тест-драйв: " + testDriveClient.getName();
         } else {
             status = "в наличии";
         }

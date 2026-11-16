@@ -8,7 +8,7 @@ public class Main {
         System.out.println("Добро пожаловать в автосалон!");
 
         Scanner scanner = new Scanner(System.in);
-        ArrayList<Car> catalog = new ArrayList<>();
+        ArrayList<Vehicle> catalog = new ArrayList<>();
         ArrayList<Client> clients = new ArrayList<>();
 
         boolean running = true;
@@ -20,12 +20,12 @@ public class Main {
             try {
                 command = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: нужно ввести число от 0 до 6.");
+                System.out.println("Ошибка: нужно ввести число от 0 до 8.");
                 continue;
             }
 
             if (command == 1) {
-                addCar(scanner, catalog);
+                addVehicle(scanner, catalog);
             } else if (command == 2) {
                 showCatalog(catalog);
             } else if (command == 3) {
@@ -35,7 +35,11 @@ public class Main {
             } else if (command == 5) {
                 addCarQuick(scanner, catalog);
             } else if (command == 6) {
-                System.out.println("Всего автомобилей заведено: " + Car.getTotalCars());
+                System.out.println("Всего автомобилей заведено: " + Vehicle.getTotalVehicles());
+            } else if (command == 7) {
+                sellVehicle(scanner, catalog, clients);
+            } else if (command == 8) {
+                bookTestDrive(scanner, catalog, clients);
             } else if (command == 0) {
                 System.out.println("До свидания!");
                 running = false;
@@ -52,61 +56,68 @@ public class Main {
         System.out.println("2 - Показать каталог");
         System.out.println("3 - Добавить клиента");
         System.out.println("4 - Показать клиентов");
-        System.out.println("5 - Быстро добавить автомобиль (марка и модель)");
+        System.out.println("5 - Быстро добавить легковой (марка и модель)");
         System.out.println("6 - Сколько всего автомобилей заведено");
+        System.out.println("7 - Продать автомобиль");
+        System.out.println("8 - Записать клиента на тест-драйв");
         System.out.println("0 - Выход");
         System.out.print("Выберите пункт: ");
     }
 
-    private static void addCar(Scanner scanner, ArrayList<Car> catalog) {
+    private static void addVehicle(Scanner scanner, ArrayList<Vehicle> catalog) {
+        System.out.print("Тип (1 - легковой, 2 - грузовой): ");
+        String type = scanner.nextLine();
+        if (!type.equals("1") && !type.equals("2")) {
+            System.out.println("Ошибка: тип должен быть 1 или 2.");
+            return;
+        }
+
         System.out.print("Марка: ");
         String brand = scanner.nextLine();
         System.out.print("Модель: ");
         String model = scanner.nextLine();
 
-        int year;
         try {
             System.out.print("Год выпуска: ");
-            year = Integer.parseInt(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Ошибка: год должен быть числом.");
-            return;
-        }
-
-        double price;
-        try {
+            int year = Integer.parseInt(scanner.nextLine());
             System.out.print("Цена: ");
-            price = Double.parseDouble(scanner.nextLine());
-        } catch (NumberFormatException e) {
-            System.out.println("Ошибка: цена должна быть числом.");
-            return;
-        }
+            double price = Double.parseDouble(scanner.nextLine());
 
-        try {
-            Car car = new Car(brand, model, year, price);
-            catalog.add(car);
+            Vehicle vehicle;
+            if (type.equals("1")) {
+                System.out.print("Число мест: ");
+                int seats = Integer.parseInt(scanner.nextLine());
+                vehicle = new PassengerCar(brand, model, year, price, seats);
+            } else {
+                System.out.print("Грузоподъёмность (т): ");
+                double capacity = Double.parseDouble(scanner.nextLine());
+                vehicle = new Truck(brand, model, year, price, capacity);
+            }
+            catalog.add(vehicle);
             System.out.println("Автомобиль добавлен.");
+        } catch (NumberFormatException e) {
+            System.out.println("Ошибка: нужно ввести число.");
         } catch (IllegalArgumentException e) {
             System.out.println("Ошибка: " + e.getMessage());
         }
     }
 
-    private static void addCarQuick(Scanner scanner, ArrayList<Car> catalog) {
+    private static void addCarQuick(Scanner scanner, ArrayList<Vehicle> catalog) {
         System.out.print("Марка: ");
         String brand = scanner.nextLine();
         System.out.print("Модель: ");
         String model = scanner.nextLine();
 
         try {
-            Car car = new Car(brand, model);
+            PassengerCar car = new PassengerCar(brand, model);
             catalog.add(car);
-            System.out.println("Автомобиль добавлен (год и цена по умолчанию).");
+            System.out.println("Автомобиль добавлен (год, цена и число мест по умолчанию).");
         } catch (IllegalArgumentException e) {
             System.out.println("Ошибка: " + e.getMessage());
         }
     }
 
-    private static void showCatalog(ArrayList<Car> catalog) {
+    private static void showCatalog(ArrayList<Vehicle> catalog) {
         if (catalog.isEmpty()) {
             System.out.println("Каталог пока пуст.");
             return;
@@ -140,6 +151,70 @@ public class Main {
         System.out.println("Клиенты:");
         for (int i = 0; i < clients.size(); i++) {
             System.out.println((i + 1) + ". " + clients.get(i));
+        }
+    }
+
+    // возвращает номер в списке (с нуля) или -1, если ввод неверный
+    private static int readIndex(Scanner scanner, String text, int size) {
+        System.out.print(text);
+        try {
+            int number = Integer.parseInt(scanner.nextLine());
+            if (number < 1 || number > size) {
+                System.out.println("Ошибка: такого номера нет в списке.");
+                return -1;
+            }
+            return number - 1;
+        } catch (NumberFormatException e) {
+            System.out.println("Ошибка: нужно ввести число.");
+            return -1;
+        }
+    }
+
+    private static void sellVehicle(Scanner scanner, ArrayList<Vehicle> catalog, ArrayList<Client> clients) {
+        if (catalog.isEmpty() || clients.isEmpty()) {
+            System.out.println("Нужен хотя бы один автомобиль и один клиент.");
+            return;
+        }
+        showCatalog(catalog);
+        int carIndex = readIndex(scanner, "Номер автомобиля: ", catalog.size());
+        if (carIndex == -1) {
+            return;
+        }
+        showClients(clients);
+        int clientIndex = readIndex(scanner, "Номер клиента: ", clients.size());
+        if (clientIndex == -1) {
+            return;
+        }
+
+        boolean success = catalog.get(carIndex).sell(clients.get(clientIndex));
+        if (success) {
+            System.out.println("Автомобиль продан.");
+        } else {
+            System.out.println("Ошибка: этот автомобиль уже продан.");
+        }
+    }
+
+    private static void bookTestDrive(Scanner scanner, ArrayList<Vehicle> catalog, ArrayList<Client> clients) {
+        if (catalog.isEmpty() || clients.isEmpty()) {
+            System.out.println("Нужен хотя бы один автомобиль и один клиент.");
+            return;
+        }
+        showCatalog(catalog);
+        int carIndex = readIndex(scanner, "Номер автомобиля: ", catalog.size());
+        if (carIndex == -1) {
+            return;
+        }
+        showClients(clients);
+        int clientIndex = readIndex(scanner, "Номер клиента: ", clients.size());
+        if (clientIndex == -1) {
+            return;
+        }
+
+        boolean success = catalog.get(carIndex).bookTestDrive(clients.get(clientIndex));
+        if (success) {
+            System.out.println("Клиент записан на тест-драйв.");
+        } else {
+            System.out.println("Ошибка: автомобиль уже продан, тест-драйв невозможен.");
         }
     }
 }
