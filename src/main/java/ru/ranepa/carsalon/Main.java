@@ -20,7 +20,7 @@ public class Main {
             try {
                 command = Integer.parseInt(input);
             } catch (NumberFormatException e) {
-                System.out.println("Ошибка: нужно ввести число от 0 до 4.");
+                System.out.println("Ошибка: нужно ввести число от 0 до 6.");
                 continue;
             }
 
@@ -32,6 +32,10 @@ public class Main {
                 addClient(scanner, clients);
             } else if (command == 4) {
                 showClients(clients);
+            } else if (command == 5) {
+                addCarQuick(scanner, catalog);
+            } else if (command == 6) {
+                System.out.println("Всего автомобилей заведено: " + Car.getTotalCars());
             } else if (command == 0) {
                 System.out.println("До свидания!");
                 running = false;
@@ -48,6 +52,8 @@ public class Main {
         System.out.println("2 - Показать каталог");
         System.out.println("3 - Добавить клиента");
         System.out.println("4 - Показать клиентов");
+        System.out.println("5 - Быстро добавить автомобиль (марка и модель)");
+        System.out.println("6 - Сколько всего автомобилей заведено");
         System.out.println("0 - Выход");
         System.out.print("Выберите пункт: ");
     }
@@ -76,9 +82,28 @@ public class Main {
             return;
         }
 
-        Car car = new Car(brand, model, year, price);
-        catalog.add(car);
-        System.out.println("Автомобиль добавлен.");
+        try {
+            Car car = new Car(brand, model, year, price);
+            catalog.add(car);
+            System.out.println("Автомобиль добавлен.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
+    }
+
+    private static void addCarQuick(Scanner scanner, ArrayList<Car> catalog) {
+        System.out.print("Марка: ");
+        String brand = scanner.nextLine();
+        System.out.print("Модель: ");
+        String model = scanner.nextLine();
+
+        try {
+            Car car = new Car(brand, model);
+            catalog.add(car);
+            System.out.println("Автомобиль добавлен (год и цена по умолчанию).");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
     }
 
     private static void showCatalog(ArrayList<Car> catalog) {
@@ -98,9 +123,13 @@ public class Main {
         System.out.print("Телефон: ");
         String phone = scanner.nextLine();
 
-        Client client = new Client(name, phone);
-        clients.add(client);
-        System.out.println("Клиент добавлен.");
+        try {
+            Client client = new Client(name, phone);
+            clients.add(client);
+            System.out.println("Клиент добавлен.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Ошибка: " + e.getMessage());
+        }
     }
 
     private static void showClients(ArrayList<Client> clients) {
